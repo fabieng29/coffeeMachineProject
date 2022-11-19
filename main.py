@@ -1,69 +1,112 @@
 # from info import resources
 import info
+from os import system, name
 
-print("Hello and welcome in the coffee machine program")
-print(info.resources)
-print(info.MENU)
 
+def clear():
+    """Define the clear function"""
+    # for windows
+    print(name)
+    if name == 'nt':
+        _ = system('cls')
+
+    # for mac and linux(here, os.name is 'posix')
+    else:
+        _ = system('clear')
 
 # Coffee Machine Program Requirements1.Prompt user by asking
 # “​What would you like? (espresso/latte/cappuccino):
 # ​”a.Check the user’s input to decide what to do next.
 # b.The prompt should show every time action has completed,
 # e.g. once the drink is dispensed. The prompt should show again to serve the next customer.
+def is_transaction_success(money_introduced, cost_drink,drink_chosen):
+    """Check if transaction is successful, deliver drink and give money back"""
+    money_back = round(money_introduced - cost_drink,2)
+    global profit
+    if money_introduced>=cost_drink:
+        print("Transaction successful")
+        print(f"You have inserted $ {money_introduced} and the cost of the drink was $ {cost_drink}")
+        print(f"Enjoy your {drink_chosen}")
+        deliver_drink(drink_chosen)
+        profit += cost_drink
+        print(f"Here is your money back $ {money_back} ")
+        return True
+    else:
+        print(f"Sorry there is not enough money, here is your $ {money_introduced} back")
+    return False
+
+def insert_money():
+    """Count how many money the customer has inserted"""
+    total = int(input("How many quarters: "))*0.25
+    total += int(input("How many dimes: "))*0.1
+    total += int(input("How many nicket: "))*0.05
+    total +=  int(input("How many pennies: "))*0.01
+    return total
+
+def deliver_drink(drink_chosen):
+    """Substract the amount of ingredients required to deliver the drink to the resources"""
+    for ingredient in info.MENU[drink_chosen]["ingredients"]:
+        info.resources[ingredient] = info.resources[ingredient] - info.MENU[drink_chosen]["ingredients"][ingredient]
 
 def ask_user():
-    #clear()
+    """Ask the user to choose a drink, allow the user to check the resources available. An option is available
+    to enter in maintenance mode """
+    # clear()
     user_choice = input("What would you like ? Espresso -> Type 1 , Latte -> Type 2, Cappuccino -> Type 3 :  ")
     if user_choice == "1":
-        print("Go for a Espresso")
+        if check_enough_resources("espresso"):
+            money_given = insert_money()
+            is_transaction_success(money_given, info.MENU["espresso"]["cost"], "espresso")
     elif user_choice == "2":
-        print("Go for an Latte")
+        if check_enough_resources("latte"):
+            money_given = insert_money()
+            is_transaction_success(money_given, info.MENU["latte"]["cost"], "latte")
     elif user_choice == "3":
-        print("Go for a Cappuccino")
+        if check_enough_resources("cappuccino"):
+            money_given = insert_money()
+            is_transaction_success(money_given, info.MENU["cappuccino"]["cost"], "cappuccino")
+    elif user_choice == "off":
+        print("Maintenance mode")
+    elif user_choice == "report":
+        print("Here are the resources available")
+        unit = ""
+        for ingredient in info.resources:
+            if ingredient == "coffee":
+                unit = "g"
+            else:
+                unit = "ml"
+            print(f"We have {info.resources[ingredient]} {unit} {ingredient} available in stock")
+        print(f"Money = {profit}")
     else:
         print("Bad choice choose something else")
     return user_choice
 
-def check_enough_resources(choice):
-    unable = False
 
-    print("---------List ingredients to check-----------")
-    print(info.MENU[choice]["ingredients"])
-    print("Ressources available")
-    print(info.resources)
-    print("---------Fin Liste ingredients-----------")
-    #print(info.MENU[choice]["ingredients"][ingredient_to_check])
+def check_enough_resources(choice):
+    """Check if there is enough ingredients to deliver the drink"""
+    able_to_deliver = True
     for ingredient in info.MENU[choice]["ingredients"]:
-        #print(ingredient)
         if info.MENU[choice]["ingredients"][ingredient] > info.resources[ingredient]:
-            unable = True
-            print("")
-            print("We have not enough")
-            print(ingredient)
-    if unable == True:
+            able_to_deliver = False
+            print(f"We have not enough {ingredient}")
+    if not able_to_deliver:
         print("Sorry we cannot deliver your drink")
     else:
         print("we can deliver your drink, please insert coins to get your drink")
-    #for ingredient in info.MENU[choice]["ingredients"][ingredient_to_check]:
-    #    print(ingredient)
+        print("We accept quarters $0.25, dimes $0.10, nickles $0.05 and pennies $0.01")
+    return able_to_deliver
 
 
-    #print(type(info.MENU[choice][ingredient_to_check])
+profit = 0
+print("Hello and welcome in the coffee machine program")
 user_decision = ""
-while (user_decision !="off"):
+while user_decision != "off":
     user_decision = ask_user()
-    if user_decision == "1":
-        print("Lets see if we have a Espresso in stock")
-        check_enough_resources("espresso")
-    elif user_decision == "2":
-        print("Lets see if we have an Latte in stock")
-        check_enough_resources("latte")
-    elif user_decision == "3":
-        print("Lets see if we have a Cappuccino in stock")
-        check_enough_resources("cappuccino")
+    clear()
 
-#
+
+
+
 
 # 2.Turn off the Coffee Machine by entering “​off​” to the prompt.
 # a.For maintainers of the coffee machine, they can use “off” as the secret word to turn offthe machine. Your code should end execution when this happens.
